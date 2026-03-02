@@ -34,7 +34,7 @@ Fork repo → Add your photos → Commit → Open Pull Request → Wait for revi
 ### 方法 A：直接在 GitHub 网页上传（最简单）/ Method A: Upload via GitHub Web (Easiest)
 
 1. 进入你 Fork 后的仓库页面（`https://github.com/<你的用户名>/Dress`）
-2. 找到你 GitHub ID 首字母对应的文件夹（如 ID 为 `Kitty`，则进入 `K` 文件夹）
+2. 找到你 GitHub ID 首字母对应的文件夹（如 ID 为 `Yueosa`，则进入 `Y` 文件夹）
 3. 点击 **Add file** → **Create new file**
 4. 在文件名栏输入 `你的GitHubID/README.md`（如 `Kitty/README.md`），这会自动创建文件夹
 5. 在文件中随意写一些内容（如自我介绍）
@@ -45,7 +45,7 @@ Fork repo → Add your photos → Commit → Open Pull Request → Wait for revi
 ---
 
 1. Go to your forked repository (`https://github.com/<your-username>/Dress`)
-2. Navigate to the folder matching the first letter of your GitHub ID (e.g., `K` for `Kitty`)
+2. Navigate to the folder matching the first letter of your GitHub ID (e.g., `Y` for `Yueosa`)
 3. Click **Add file** → **Create new file**
 4. Type `YourGitHubID/README.md` (e.g., `Kitty/README.md`) in the filename field — this auto-creates the folder
 5. Write some content (e.g., a brief introduction)
