@@ -86,7 +86,7 @@ jobs:
                 // EXIF content never appears in CI logs — only the line count is captured
                 const safePath = file.replace(/'/g, "'\\''");
                 const output = execSync(
-                  `exiftool -EXIF:all -S -q '${safePath}' 2>/dev/null | wc -l`,
+                  `exiftool -EXIF:all -S -q -- '${safePath}' 2>/dev/null | wc -l`,
                   { encoding: 'utf-8', timeout: 10000 }
                 ).trim();
 
