@@ -33,7 +33,7 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
-            const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif', '.heic', '.heif', '.avif'];
+            const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif', '.heic', '.heif', '.avif', '.gif'];
 
             // Collect changed image files via GitHub API
             let page = 1;
@@ -116,13 +116,6 @@ jobs:
                 '📖 如何移除 EXIF 信息？请参考 [CONTRIBUTING.md](https://github.com/' + owner + '/' + repo + '/blob/main/CONTRIBUTING.md) 中的详细说明。',
                 '📖 How to remove EXIF data? See the detailed guide in [CONTRIBUTING.md](https://github.com/' + owner + '/' + repo + '/blob/main/CONTRIBUTING.md).',
                 '',
-                '快速命令 / Quick command:',
-                '```bash',
-                'exiftool -all= -overwrite_original <your_image_file>',
-                '```',
-                '',
-                '> 💡 维护者也可以在评论中回复 `/strip-exif` 来自动帮你移除 EXIF 数据（仅限同仓库 PR）。',
-                '> 💡 Maintainers can also reply `/strip-exif` to auto-strip EXIF data for you (same-repo PRs only).',
               ].join('\n');
 
               await github.rest.issues.createComment({
