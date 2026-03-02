@@ -20,13 +20,13 @@ Fork repo → Add your photos → Commit → Open Pull Request → Wait for revi
 > **Fork** = 把别人的仓库「复制」一份到你自己的 GitHub 账号下，让你可以自由修改喵，不会影响原项目喵!  
 > **Fork** = Creating your own copy of someone else's repository under your GitHub account, so you can freely make changes without affecting the original.
 
-1. 打开 [Dress 仓库页面](https://github.com/Yueosa/Dress)
+1. 打开 [Dress 仓库页面](https://github.com/Cute-Dress/Dress)
 2. 点击页面右上角的 **Fork** 按钮
 3. 这会在你的 GitHub 账号下创建一份仓库副本
 
 ---
 
-1. Go to the [Dress repository page](https://github.com/Yueosa/Dress)
+1. Go to the [Dress repository page](https://github.com/Cute-Dress/Dress)
 2. Click the **Fork** button at the top right
 3. This creates a copy of the repository under your GitHub account
 
@@ -153,4 +153,4 @@ Once a maintainer approves, your PR will be merged. Congratulations on your firs
 - [项目说明 / Project README](README.md)
 - [贡献指南 / Contributing Guide](CONTRIBUTING.md)
 - [项目详细说明 / Detailed README](README_DETAIL.md)
-- [已合并的 PR 参考 / Merged PRs for reference](https://github.com/Yueosa/Dress/pulls?q=is%3Apr+is%3Amerged)
+- [已合并的 PR 参考 / Merged PRs for reference](https://github.com/Cute-Dress/Dress/pulls?q=is%3Apr+is%3Amerged)

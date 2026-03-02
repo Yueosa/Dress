@@ -1,10 +1,10 @@
 ## 📸 Pull Request
 
-> 🌟 **第一次提交？** 欢迎！请先阅读 [新手指南 / Beginner Guide](https://github.com/Yueosa/Dress/blob/main/GUIDE.md) 了解完整的提交流程。
-> 你也可以浏览仓库中其他贡献者的目录结构，或查看 [已合并的 PR](https://github.com/Yueosa/Dress/pulls?q=is%3Apr+is%3Amerged) 来了解正确的提交方式。
+> 🌟 **第一次提交？** 欢迎！请先阅读 [新手指南 / Beginner Guide](https://github.com/Cute-Dress/Dress/blob/main/GUIDE.md) 了解完整的提交流程。
+> 你也可以浏览仓库中其他贡献者的目录结构，或查看 [已合并的 PR](https://github.com/Cute-Dress/Dress/pulls?q=is%3Apr+is%3Amerged) 来了解正确的提交方式。
 >
-> 🌟 **First time?** Welcome! Please read the [Beginner Guide](https://github.com/Yueosa/Dress/blob/main/GUIDE.md) for the full submission workflow.
-> You can also browse other contributors' folders in the repo, or check [merged PRs](https://github.com/Yueosa/Dress/pulls?q=is%3Apr+is%3Amerged) for reference.
+> 🌟 **First time?** Welcome! Please read the [Beginner Guide](https://github.com/Cute-Dress/Dress/blob/main/GUIDE.md) for the full submission workflow.
+> You can also browse other contributors' folders in the repo, or check [merged PRs](https://github.com/Cute-Dress/Dress/pulls?q=is%3Apr+is%3Amerged) for reference.
 
 ### 描述 / Description
 <!-- 请简要描述你的PR内容 / Please briefly describe your PR -->
