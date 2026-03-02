@@ -83,7 +83,7 @@ jobs:
             -iname "*.webp" -o -iname "*.tiff" -o -iname "*.tif" -o \
             -iname "*.heic" -o -iname "*.heif" -o -iname "*.avif" \
           \) -not -path "./.git/*" \
-            -exec exiftool -all= -overwrite_original {} + 2>/dev/null || true
+            -exec exiftool -all= -overwrite_original {} + 2>&1 || echo "Note: some files may not support EXIF stripping"
 
       - name: Commit and push changes
         if: steps.check-perm.outputs.require-result == 'true' && steps.pr.outputs.is_fork != 'true'
