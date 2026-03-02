@@ -13,6 +13,8 @@ jobs:
   check-exif:
     runs-on: ubuntu-latest
     steps:
+      # Security: checkout is pinned to head SHA (immutable).
+      # Only exiftool (system package) runs on checked-out files — no PR code is executed.
       - name: Checkout PR head
         uses: actions/checkout@v4
         with:

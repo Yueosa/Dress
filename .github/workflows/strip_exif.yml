@@ -42,6 +42,7 @@ jobs:
             const baseRepo = `${context.repo.owner}/${context.repo.repo}`;
             const isFork = headRepo !== baseRepo;
             core.setOutput('head_ref', pr.data.head.ref);
+            core.setOutput('head_sha', pr.data.head.sha);
             core.setOutput('is_fork', isFork.toString());
 
       - name: Post fork notice
@@ -63,12 +64,20 @@ jobs:
               ].join('\n')
             });
 
+      # Security: checkout is pinned to head SHA to prevent TOCTOU attacks.
+      # Only exiftool (system package) runs on checked-out files — no PR code is executed.
       - name: Checkout PR branch
         if: steps.check-perm.outputs.require-result == 'true' && steps.pr.outputs.is_fork != 'true'
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.pr.outputs.head_ref }}
+          ref: ${{ steps.pr.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup branch for push
+        if: steps.check-perm.outputs.require-result == 'true' && steps.pr.outputs.is_fork != 'true'
+        env:
+          HEAD_REF: ${{ steps.pr.outputs.head_ref }}
+        run: git checkout -B "$HEAD_REF"
 
       - name: Install exiftool
         if: steps.check-perm.outputs.require-result == 'true' && steps.pr.outputs.is_fork != 'true'
