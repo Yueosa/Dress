@@ -1,0 +1,137 @@
+name: Check Image EXIF Data
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  check-exif:
+    runs-on: ubuntu-latest
+    steps:
+      # Security: checkout is pinned to head SHA (immutable).
+      # Only exiftool (system package) runs on checked-out files — no PR code is executed.
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install exiftool
+        run: sudo apt-get update && sudo apt-get install -y libimage-exiftool-perl
+
+      - name: Check EXIF in changed images
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+            const prNumber = context.payload.pull_request.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif', '.heic', '.heif', '.avif'];
+
+            // Collect changed image files via GitHub API
+            let page = 1;
+            let changedImages = [];
+
+            while (true) {
+              const response = await github.rest.pulls.listFiles({
+                owner, repo,
+                pull_number: prNumber,
+                per_page: 100,
+                page
+              });
+
+              const files = response.data;
+              if (files.length === 0) break;
+
+              for (const file of files) {
+                if (['added', 'modified', 'renamed', 'copied'].includes(file.status)) {
+                  const dotIndex = file.filename.lastIndexOf('.');
+                  if (dotIndex !== -1) {
+                    const ext = file.filename.toLowerCase().substring(dotIndex);
+                    if (IMAGE_EXTENSIONS.includes(ext)) {
+                      changedImages.push(file.filename);
+                    }
+                  }
+                }
+              }
+
+              if (files.length < 100) break;
+              page++;
+            }
+
+            if (changedImages.length === 0) {
+              core.info('No image files changed in this PR.');
+              return;
+            }
+
+            core.info(`Found ${changedImages.length} changed image file(s) to check for EXIF data.`);
+
+            let exifFiles = [];
+
+            for (const file of changedImages) {
+              if (!fs.existsSync(file)) {
+                core.warning(`File not found in checkout: ${file}`);
+                continue;
+              }
+
+              try {
+                // Detect EXIF tag count via pipe to wc -l
+                // EXIF content never appears in CI logs — only the line count is captured
+                const safePath = file.replace(/'/g, "'\\''");
+                const output = execSync(
+                  `exiftool -EXIF:all -S -q '${safePath}' 2>/dev/null | wc -l`,
+                  { encoding: 'utf-8', timeout: 10000 }
+                ).trim();
+
+                const tagCount = parseInt(output) || 0;
+                if (tagCount > 0) {
+                  exifFiles.push(file);
+                  core.info(`EXIF data detected in: ${file} (${tagCount} tag(s))`);
+                }
+              } catch (e) {
+                core.warning(`Could not check EXIF for ${file}`);
+              }
+            }
+
+            if (exifFiles.length > 0) {
+              const fileList = exifFiles.map(f => `- \`${f}\``).join('\n');
+              const body = [
+                '⚠️ **EXIF 信息检测 / EXIF Data Detection**',
+                '',
+                '你好呀～你的图片中存在 EXIF 信息哦！EXIF 元数据可能包含你的隐私信息（如 GPS 位置、设备信息等），为了保护你的隐私安全，请移除 EXIF 数据后再提交，或者等待维护者来帮你处理喵～ 🐱',
+                '',
+                'Hi there~ We detected EXIF data in your images! EXIF metadata may contain private information (such as GPS location, device info, etc.). To protect your privacy, please remove the EXIF data and resubmit, or wait for a maintainer to help you out~ 🐱',
+                '',
+                '**涉及的文件 / Affected files:**',
+                '',
+                fileList,
+                '',
+                '📖 如何移除 EXIF 信息？请参考 [CONTRIBUTING.md](https://github.com/' + owner + '/' + repo + '/blob/main/CONTRIBUTING.md) 中的详细说明。',
+                '📖 How to remove EXIF data? See the detailed guide in [CONTRIBUTING.md](https://github.com/' + owner + '/' + repo + '/blob/main/CONTRIBUTING.md).',
+                '',
+                '快速命令 / Quick command:',
+                '```bash',
+                'exiftool -all= -overwrite_original <your_image_file>',
+                '```',
+                '',
+                '> 💡 维护者也可以在评论中回复 `/strip-exif` 来自动帮你移除 EXIF 数据（仅限同仓库 PR）。',
+                '> 💡 Maintainers can also reply `/strip-exif` to auto-strip EXIF data for you (same-repo PRs only).',
+              ].join('\n');
+
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number: prNumber,
+                body
+              });
+
+              core.setFailed('EXIF data detected in image files. Please remove EXIF data for privacy protection.');
+            } else {
+              core.info('No EXIF data found in changed images. ✅');
+            }
