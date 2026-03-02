@@ -17,6 +17,9 @@ Fork repo → Add your photos → Commit → Open Pull Request → Wait for revi
 
 ## 第一步：Fork 仓库 / Step 1: Fork the Repository
 
+> **Fork** = 把别人的仓库「复制」一份到你自己的 GitHub 账号下，让你可以自由修改喵，不会影响原项目喵!  
+> **Fork** = Creating your own copy of someone else's repository under your GitHub account, so you can freely make changes without affecting the original.
+
 1. 打开 [Dress 仓库页面](https://github.com/Yueosa/Dress)
 2. 点击页面右上角的 **Fork** 按钮
 3. 这会在你的 GitHub 账号下创建一份仓库副本
@@ -31,12 +34,15 @@ Fork repo → Add your photos → Commit → Open Pull Request → Wait for revi
 
 ## 第二步：添加你的照片 / Step 2: Add Your Photos
 
+> **Commit** = 给你的修改拍一张「快照」，记录你改了什么内容，每次 Commit 都会生成一条历史记录喵!  
+> **Commit** = Taking a "snapshot" of your changes, recording what you modified. Each commit creates a point in the project history.
+
 ### 方法 A：直接在 GitHub 网页上传（最简单）/ Method A: Upload via GitHub Web (Easiest)
 
 1. 进入你 Fork 后的仓库页面（`https://github.com/<你的用户名>/Dress`）
 2. 找到你 GitHub ID 首字母对应的文件夹（如 ID 为 `Yueosa`，则进入 `Y` 文件夹）
 3. 点击 **Add file** → **Create new file**
-4. 在文件名栏输入 `你的GitHubID/README.md`（如 `Kitty/README.md`），这会自动创建文件夹
+4. 在文件名栏输入 `你的GitHubID/README.md`（如 `Yueosa/README.md`），这会自动创建文件夹
 5. 在文件中随意写一些内容（如自我介绍）
 6. 点击 **Commit changes**
 7. 再次点击 **Add file** → **Upload files**，将你的照片上传到刚创建的文件夹中
@@ -47,7 +53,7 @@ Fork repo → Add your photos → Commit → Open Pull Request → Wait for revi
 1. Go to your forked repository (`https://github.com/<your-username>/Dress`)
 2. Navigate to the folder matching the first letter of your GitHub ID (e.g., `Y` for `Yueosa`)
 3. Click **Add file** → **Create new file**
-4. Type `YourGitHubID/README.md` (e.g., `Kitty/README.md`) in the filename field — this auto-creates the folder
+4. Type `YourGitHubID/README.md` (e.g., `Yueosa/README.md`) in the filename field — this auto-creates the folder
 5. Write some content (e.g., a brief introduction)
 6. Click **Commit changes**
 7. Click **Add file** → **Upload files** again, and upload your photos into the folder you just created
@@ -56,6 +62,11 @@ Fork repo → Add your photos → Commit → Open Pull Request → Wait for revi
 ---
 
 ### 方法 B：使用 Git 命令行 / Method B: Using Git CLI
+
+> **Clone** = 把远程仓库下载到本地电脑。
+> **Push** = 把本地的 Commit 上传同步到远程仓库（你的 Fork）。  
+> **Clone** = Downloading the remote repository to your local machine. 
+> **Push** = Uploading your local commits back to the remote repository (your Fork).
 
 ```bash
 # 1. 克隆你 Fork 的仓库 / Clone your forked repository
@@ -79,6 +90,9 @@ git push origin main
 ---
 
 ## 第三步：发起 Pull Request / Step 3: Open a Pull Request
+
+> **Pull Request（PR）** = 向原仓库的维护者提出申请：「我在我的 Fork 里做了一些修改，请把它们合并到原项目里吧喵！」  
+> **Pull Request (PR)** = A request to the original repository's maintainers saying: "I've made some changes in my Fork — please merge them into the original project!"
 
 1. 回到你 Fork 的仓库页面
 2. 你会看到一个提示 **"This branch is X commits ahead"**，点击 **Contribute** → **Open pull request**
