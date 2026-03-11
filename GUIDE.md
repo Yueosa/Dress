@@ -70,7 +70,11 @@ Fork repo → Add your photos → Commit → Open Pull Request → Wait for revi
 
 ```bash
 # 1. 克隆你 Fork 的仓库 / Clone your forked repository
-git clone https://github.com/<你的用户名>/Dress.git
+# 💡 由于仓库 commit 历史较多，直接 clone 可能较慢。
+#    推荐使用 --depth 1 仅拉取最近一次提交，速度更快喵！
+# 💡 The repo has a large commit history, so a full clone may be slow.
+#    Consider using --depth 1 to only fetch the latest commit for a faster download!
+git clone --depth 1 https://github.com/<你的用户名>/Dress.git
 cd Dress
 
 # 2. 创建你的文件夹并添加照片 / Create your folder and add photos
