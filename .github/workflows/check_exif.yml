@@ -30,7 +30,7 @@ jobs:
       # Security: checkout is pinned to head SHA (immutable).
       # Only exiftool (system package) runs on checked-out files — no PR code is executed.
       - name: Checkout PR head
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
@@ -38,10 +38,19 @@ jobs:
           fetch-depth: 1
 
       - name: Install exiftool
-        run: sudo apt-get update && sudo apt-get install -y libimage-exiftool-perl
+        run: |
+          if command -v exiftool >/dev/null 2>&1; then
+            exiftool -ver
+            exit 0
+          fi
+          # Try fast path first; run apt-get update only if needed.
+          sudo apt-get install -y --no-install-recommends libimage-exiftool-perl || (
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends libimage-exiftool-perl
+          )
+          exiftool -ver
 
       - name: Check EXIF in changed images
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { execSync } = require('child_process');
@@ -133,35 +142,46 @@ jobs:
               return;
             }
 
+            let canComment = true;
+
             // Keep at most one EXIF warning comment: delete previous bot comments first.
-            let pageForComments = 1;
-            while (true) {
-              const commentsResp = await github.rest.issues.listComments({
-                owner,
-                repo,
-                issue_number: prNumber,
-                per_page: 100,
-                page: pageForComments
-              });
+            try {
+              let pageForComments = 1;
+              while (true) {
+                const commentsResp = await github.rest.issues.listComments({
+                  owner,
+                  repo,
+                  issue_number: prNumber,
+                  per_page: 100,
+                  page: pageForComments
+                });
 
-              const comments = commentsResp.data;
-              if (comments.length === 0) break;
+                const comments = commentsResp.data;
+                if (comments.length === 0) break;
 
-              for (const c of comments) {
-                if (typeof c.body === 'string' && (
-                  c.body.includes(EXIF_COMMENT_MARKER) ||
-                  c.body.includes('⚠️ **EXIF 信息检测 / EXIF Data Detection**')
-                )) {
-                  await github.rest.issues.deleteComment({
-                    owner,
-                    repo,
-                    comment_id: c.id
-                  });
+                for (const c of comments) {
+                  if (typeof c.body === 'string' && (
+                    c.body.includes(EXIF_COMMENT_MARKER) ||
+                    c.body.includes('⚠️ **EXIF 信息检测 / EXIF Data Detection**')
+                  )) {
+                    await github.rest.issues.deleteComment({
+                      owner,
+                      repo,
+                      comment_id: c.id
+                    });
+                  }
                 }
-              }
 
-              if (comments.length < 100) break;
-              pageForComments++;
+                if (comments.length < 100) break;
+                pageForComments++;
+              }
+            } catch (e) {
+              canComment = false;
+              core.warning(
+                `Cannot manage PR comments (likely token permission issue). ` +
+                `Please set Actions Workflow permissions to Read and write in repository settings. ` +
+                `Error: ${e.message}`
+              );
             }
 
             if (exifFiles.length > 0) {
@@ -183,11 +203,21 @@ jobs:
                 '',
               ].join('\n');
 
-              await github.rest.issues.createComment({
-                owner, repo,
-                issue_number: prNumber,
-                body
-              });
+              if (canComment) {
+                try {
+                  await github.rest.issues.createComment({
+                    owner, repo,
+                    issue_number: prNumber,
+                    body
+                  });
+                } catch (e) {
+                  core.warning(
+                    `Cannot create PR comment (likely token permission issue). ` +
+                    `Please set Actions Workflow permissions to Read and write in repository settings. ` +
+                    `Error: ${e.message}`
+                  );
+                }
+              }
 
               core.setFailed('EXIF data detected in image files. Please remove EXIF data for privacy protection.');
             } else {
