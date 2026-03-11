@@ -6,9 +6,6 @@
 > 🌟 **First time?** Welcome! Please read the [Beginner Guide](https://github.com/Cute-Dress/Dress/blob/main/GUIDE.md) for the full submission workflow.
 > You can also browse other contributors' folders in the repo, or check [merged PRs](https://github.com/Cute-Dress/Dress/pulls?q=is%3Apr+is%3Amerged) for reference.
 
-### 描述 / Description
-<!-- 请简要描述你的PR内容 / Please briefly describe your PR -->
-
 ### 检查清单 / Checklist
 
 - [ ] 图片已压缩至 1MB 以内 / Images are compressed to under 1MB
