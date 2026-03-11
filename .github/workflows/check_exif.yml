@@ -88,14 +88,14 @@ jobs:
               return;
             }
             if (exifFiles.length) {
-              const fileList = exifFiles.map(f => `- \`${f}\``).join('\n');
+              const fileList = exifFiles.map(f => `- ${f}`).join('\n');
               const body = [
-                '<!-- exif-warning-comment -->',
-                '⚠️ **EXIF 信息检测 / EXIF Data Detection**\n',
-                '你好呀～你的图片中存在 EXIF 信息哦！EXIF 元数据可能包含你的隐私信息（如 GPS 位置、设备信息等），为了保护你的隐私安全，请移除 EXIF 数据后再提交，或者等待维护者来帮你处理喵～ 🐱\n',
-                'Hi there~ EXIF data was detected in your images! EXIF metadata may contain private info (GPS, device, etc.). Please remove EXIF data and resubmit, or wait for a maintainer to help~ 🐱\n',
-                '**涉及的文件 / Affected files:**\n', fileList, '',
-                `📖 [CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/main/CONTRIBUTING.md)`,
+                '我们检测到以下文件包含 EXIF 信息，请移除 EXIF 数据后再次提交:',
+                'We detected EXIF data in the following files. Please remove the EXIF data and resubmit:',
+                '',
+                fileList,
+                '',
+                `📖 [CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/master/CONTRIBUTING.md)`
               ].join('\n');
               try { await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body }); }
               catch (e) { core.warning(`Cannot comment: ${e.message}. Check repo Settings > Actions > Workflow permissions.`); }
