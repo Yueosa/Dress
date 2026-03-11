@@ -3,11 +3,25 @@ name: Check Image EXIF Data
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
+    paths:
+      - '**/*.jpg'
+      - '**/*.jpeg'
+      - '**/*.png'
+      - '**/*.webp'
+      - '**/*.tiff'
+      - '**/*.tif'
+      - '**/*.heic'
+      - '**/*.heif'
+      - '**/*.avif'
+      - '**/*.gif'
 
 permissions:
   contents: read
-  pull-requests: write
   issues: write
+
+concurrency:
+  group: exif-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   check-exif:
@@ -18,7 +32,10 @@ jobs:
       - name: Checkout PR head
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 1
 
       - name: Install exiftool
         run: sudo apt-get update && sudo apt-get install -y libimage-exiftool-perl
@@ -32,6 +49,7 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+            const EXIF_COMMENT_MARKER = '<!-- exif-warning-comment -->';
 
             const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif', '.heic', '.heif', '.avif', '.gif'];
 
@@ -74,6 +92,7 @@ jobs:
             core.info(`Found ${changedImages.length} changed image file(s) to check for EXIF data.`);
 
             let exifFiles = [];
+            let checkErrors = [];
 
             for (const file of changedImages) {
               if (!fs.existsSync(file)) {
@@ -97,12 +116,58 @@ jobs:
                 }
               } catch (e) {
                 core.warning(`Could not check EXIF for ${file}`);
+                checkErrors.push(file);
               }
+            }
+
+            if (checkErrors.length > 0) {
+              const errorFileList = checkErrors.map(f => `- \`${f}\``).join('\n');
+              core.setFailed(
+                [
+                  'Failed to check EXIF for one or more files. Please retry or ask a maintainer to review manually.',
+                  '',
+                  'Files with check errors:',
+                  errorFileList
+                ].join('\n')
+              );
+              return;
+            }
+
+            // Keep at most one EXIF warning comment: delete previous bot comments first.
+            let pageForComments = 1;
+            while (true) {
+              const commentsResp = await github.rest.issues.listComments({
+                owner,
+                repo,
+                issue_number: prNumber,
+                per_page: 100,
+                page: pageForComments
+              });
+
+              const comments = commentsResp.data;
+              if (comments.length === 0) break;
+
+              for (const c of comments) {
+                if (typeof c.body === 'string' && (
+                  c.body.includes(EXIF_COMMENT_MARKER) ||
+                  c.body.includes('⚠️ **EXIF 信息检测 / EXIF Data Detection**')
+                )) {
+                  await github.rest.issues.deleteComment({
+                    owner,
+                    repo,
+                    comment_id: c.id
+                  });
+                }
+              }
+
+              if (comments.length < 100) break;
+              pageForComments++;
             }
 
             if (exifFiles.length > 0) {
               const fileList = exifFiles.map(f => `- \`${f}\``).join('\n');
               const body = [
+                EXIF_COMMENT_MARKER,
                 '⚠️ **EXIF 信息检测 / EXIF Data Detection**',
                 '',
                 '你好呀～你的图片中存在 EXIF 信息哦！EXIF 元数据可能包含你的隐私信息（如 GPS 位置、设备信息等），为了保护你的隐私安全，请移除 EXIF 数据后再提交，或者等待维护者来帮你处理喵～ 🐱',
