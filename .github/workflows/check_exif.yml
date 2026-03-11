@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
   issues: write
 
 concurrency:
@@ -27,16 +28,6 @@ jobs:
   check-exif:
     runs-on: ubuntu-latest
     steps:
-      # Security: checkout is pinned to head SHA (immutable).
-      # Only exiftool (system package) runs on checked-out files — no PR code is executed.
-      - name: Checkout PR head
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.sha }}
-          persist-credentials: false
-          fetch-depth: 1
-
       - name: Install exiftool
         run: |
           if command -v exiftool >/dev/null 2>&1; then
@@ -55,9 +46,12 @@ jobs:
           script: |
             const { execSync } = require('child_process');
             const fs = require('fs');
+            const os = require('os');
+            const path = require('path');
             const prNumber = context.payload.pull_request.number;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
             const EXIF_COMMENT_MARKER = '<!-- exif-warning-comment -->';
 
             const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif', '.heic', '.heif', '.avif', '.gif'];
@@ -102,17 +96,30 @@ jobs:
 
             let exifFiles = [];
             let checkErrors = [];
+            const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'exif-check-'));
 
             for (const file of changedImages) {
-              if (!fs.existsSync(file)) {
-                core.warning(`File not found in checkout: ${file}`);
-                continue;
-              }
+              const safeName = file.replace(/[\\/]/g, '__');
+              const tempFile = path.join(tempRoot, safeName);
 
               try {
+                const contentResp = await github.rest.repos.getContent({
+                  owner: pr.head.repo.owner.login,
+                  repo: pr.head.repo.name,
+                  path: file,
+                  ref: pr.head.sha
+                });
+
+                if (Array.isArray(contentResp.data) || !contentResp.data.content) {
+                  throw new Error('Unexpected content response for file.');
+                }
+
+                const raw = Buffer.from(contentResp.data.content, 'base64');
+                fs.writeFileSync(tempFile, raw);
+
                 // Detect EXIF tag count via pipe to wc -l
                 // EXIF content never appears in CI logs — only the line count is captured
-                const safePath = file.replace(/'/g, "'\\''");
+                const safePath = tempFile.replace(/'/g, "'\\''");
                 const output = execSync(
                   `exiftool -EXIF:all -S -q -- '${safePath}' 2>/dev/null | wc -l`,
                   { encoding: 'utf-8', timeout: 10000 }
@@ -124,9 +131,21 @@ jobs:
                   core.info(`EXIF data detected in: ${file} (${tagCount} tag(s))`);
                 }
               } catch (e) {
-                core.warning(`Could not check EXIF for ${file}`);
+                core.warning(`Could not check EXIF for ${file}: ${e.message}`);
                 checkErrors.push(file);
+              } finally {
+                try {
+                  if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+                } catch (_) {
+                  // best-effort cleanup
+                }
               }
+            }
+
+            try {
+              fs.rmdirSync(tempRoot);
+            } catch (_) {
+              // best-effort cleanup
             }
 
             if (checkErrors.length > 0) {
