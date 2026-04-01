@@ -72,11 +72,29 @@ jobs:
                 } else throw new Error('Cannot fetch file content');
 
                 fs.writeFileSync(tmpFile, raw);
+                // Check only high-sensitivity fields:
+                //   GPS:*               — precise location coordinates
+                //   IPTC address fields — textual shooting address
+                //   XMP location/contact fields — address & contact info written by editing software
+                const HIGH_SENS_ARGS = [
+                  '-GPS:GPSLatitude', '-GPS:GPSLongitude', '-GPS:GPSAltitude',
+                  '-GPS:GPSDateStamp', '-GPS:GPSTimeStamp',
+                  '-GPS:GPSSpeed', '-GPS:GPSTrack', '-GPS:GPSImgDirection',
+                  '-IPTC:City', '-IPTC:Country-PrimaryLocationName',
+                  '-IPTC:Sub-location', '-IPTC:Province-State',
+                  '-XMP-photoshop:City', '-XMP-photoshop:Country', '-XMP-photoshop:State',
+                  '-XMP-iptcCore:CreatorWorkEmail', '-XMP-iptcCore:CreatorWorkTelephone',
+                  '-XMP-iptcCore:CreatorCity', '-XMP-iptcCore:CreatorCountry',
+                  '-XMP-iptcCore:CreatorPostalCode',
+                ];
+                const safeFile = tmpFile.replace(/'/g, "'\\\\'");
+                // Filter out empty/undef/all-zero placeholder values (e.g. GPS IFD container with no real coords).
+                // `: *(undef|00:00:00)?$` matches lines like "GPSLatitude: ", "GPSAltitude: undef", "GPSTimeStamp: 00:00:00"
                 const count = parseInt(execSync(
-                  `exiftool -EXIF:all -S -q -- '${tmpFile.replace(/'/g, "'\\''")}' 2>/dev/null | wc -l`,
+                  `exiftool ${HIGH_SENS_ARGS.join(' ')} -S -q -- '${safeFile}' 2>/dev/null | grep -Ev ': *(undef|00:00:00)?$' | wc -l`,
                   { encoding: 'utf-8', timeout: 10000 }
                 ).trim()) || 0;
-                if (count > 0) { exifFiles.push(file); core.info(`EXIF found: ${file} (${count} tags)`); }
+                if (count > 0) { exifFiles.push(file); core.info(`Sensitive EXIF found: ${file} (${count} tags)`); }
               } catch (e) { core.warning(`Check failed: ${file}: ${e.message}`); errors.push(file); }
               finally { try { fs.unlinkSync(tmpFile); } catch {} }
             }
@@ -90,12 +108,15 @@ jobs:
             if (exifFiles.length) {
               const fileList = exifFiles.map(f => `- ${f}`).join('\n');
               const body = [
-                '我们检测到以下文件包含 EXIF 信息，请移除 EXIF 数据后再次提交:',
-                'We detected EXIF data in the following files. Please remove the EXIF data and resubmit:',
+                '我们检测到以下文件包含**高敏感 EXIF 信息**（如 GPS 坐标、地址或联系方式），请移除后再次提交:',
+                'We detected **high-sensitivity EXIF data** (e.g. GPS coordinates, address, or contact fields) in the following files. Please remove them and resubmit:',
                 '',
                 fileList,
                 '',
-                `📖 [CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/master/CONTRIBUTING.md)`
+                '**仅高敏感字段（GPS / 地址 / 联系方式）需要移除，普通摄影参数（光圈、快门等）无需处理。**',
+                '**Only high-sensitivity fields (GPS / address / contact info) need to be removed. Regular photography parameters (aperture, shutter speed, etc.) are fine to keep.**',
+                '',
+                `📖 [EXIF 说明 / EXIF Guide](https://github.com/${owner}/${repo}/blob/master/EXIF.md) · [CONTRIBUTING.md](https://github.com/${owner}/${repo}/blob/master/CONTRIBUTING.md)`
               ].join('\n');
               try { await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body }); }
               catch (e) { core.warning(`Cannot comment: ${e.message}. Check repo Settings > Actions > Workflow permissions.`); }
